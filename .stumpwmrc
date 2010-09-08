@@ -32,23 +32,23 @@
 
 ;; program shortcuts
 
-(defun define-program-commands (&rest names)
-  (map nil #'(lambda (name)
-	       (defcommand name () ()
-		 (run-or-raise name `(:class ,name))))
-       names))
+(defmacro define-program-commands (&rest names)
+	   `(progn
+	      ,@(mapcar #'(lambda (name)
+			    `(defcommand ,(read-from-string name) () ()
+			       (run-or-raise ,name (list :class ,name))))
+			names)))
 
 (define-program-commands
   "chromium"
-  "urxvt"
-  "psi")
+  "urxvt")
 
 ;; keybindings
 
 (defmacro define-keys (map &rest keys)
   `(progn
      ,@(mapcar #'(lambda (k)
-		   (define-key map (kbd (first k)) (second k)))
+		   `(define-key ,map (kbd ,(first k)) ,(second k)))
 	       keys)))
 
 (define-keys *top-map*
@@ -56,16 +56,16 @@
   ("s-T" "urxvt")
   ("s-P" "psi")
   ("s-R" "loadrc")
-  ; switching inside group
-  ("M-TAB" "gnext")
-  ("s-TAB" "gprev")
+  ; switching frames
+  ("M-TAB" "next")
+  ("s-TAB" "prev")
   ; switching groups
   ("M-F1" "gselect 1")
   ("M-F2" "gselect 2")
   ("M-F3" "gselect 3")
   ("M-F4" "gselect 4"))
 
-(set-key-prefix (kbd "s-z"))
+(set-prefix-key (kbd "s-z"))
 
 (define-keys *root-map*
   ("d" "echo-date"))
@@ -73,4 +73,13 @@
 ;; contrib
 
 (set-contrib-dir "/usr/share/stumpwm/")
+
+;; special program startup
+
+(defcommand psi () ()
+  (hsplit)
+  (resize (- (round (/ (screen-width (current-screen)) 5)))
+	  (screen-height (current-screen)))
+  (run-or-raise "psi" '(:class "psi")))
+
 
