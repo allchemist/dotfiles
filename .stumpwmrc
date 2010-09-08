@@ -22,22 +22,38 @@
 (setf *mouse-focus-policy* :click)
 (set-font "-misc-*-*-*-*-*-15-*-*-*-*-*-*-r")
 (setf *window-format* "%n - %c ")
-(toggle-mode-line (current-screen) (current-head))
+(enable-mode-line (current-screen) (current-head) t)
 
 ;; groups
 
-(gnewbg "G2")
-(gnewbg "G3")
-(gnewbg "G4")
+(defcommand switch-or-create-group (idx) ((:number idx))
+  (let ((str (write-to-string idx)))
+    (if (find-group (current-screen) str)
+	(eval-command (concatenate 'string "gselect " str))
+	(progn (gnew str)
+	       (echo-string (current-screen) "New group created")))))
+
+(defcommand switch-or-create-float-group (idx) ((:number idx))
+  (let ((str (write-to-string idx)))
+    (if (find-group (current-screen) str)
+	(eval-command (concatenate 'string "gselect " str))
+	(progn (gnew-float str)
+	       (echo-string (current-screen) "New float group created")))))
+
+(defcommand gmove-to (idx) ((:number idx))
+  (gmove (find-group (current-screen) (write-to-string idx)))
+  (echo-string (current-screen)
+	       (concatenate 'string "This window now in group " (write-to-string idx))))
 
 ;; program shortcuts
 
 (defmacro define-program-commands (&rest names)
-	   `(progn
-	      ,@(mapcar #'(lambda (name)
-			    `(defcommand ,(read-from-string name) () ()
-			       (run-or-raise ,name (list :class ,name))))
-			names)))
+  `(progn
+     ,@(mapcar #'(lambda (name)
+		   `(defcommand ,(read-from-string name) () ()
+		      (run-or-raise ,name (list :class ,name))))
+	       names)))
+
 
 (define-program-commands
   "chromium"
@@ -60,15 +76,26 @@
   ("M-TAB" "next")
   ("s-TAB" "prev")
   ; switching groups
-  ("M-F1" "gselect 1")
-  ("M-F2" "gselect 2")
-  ("M-F3" "gselect 3")
-  ("M-F4" "gselect 4"))
+  ("M-F1" "gselect Default")
+  ("M-F2" "switch-or-create-group 2")
+  ("M-F3" "switch-or-create-group 3")
+  ("M-F4" "switch-or-create-group 4")
+  ("M-F5" "switch-or-create-group 5")
+  ("s-F2" "switch-or-create-float-group 2")
+  ("s-F3" "switch-or-create-float-group 3")
+  ("s-F4" "switch-or-create-float-group 4")
+  ("s-F5" "switch-or-create-float-group 5"))
 
 (set-prefix-key (kbd "s-z"))
 
 (define-keys *root-map*
-  ("d" "echo-date"))
+  ("d" "echo-date")
+  ; moving window to group
+  ("M-F1" "gmove-to 1")
+  ("M-F2" "gmove-to 2")
+  ("M-F3" "gmove-to 3")
+  ("M-F4" "gmove-to 4")
+  ("M-F5" "gmove-to 5"))
 
 ;; contrib
 
@@ -77,9 +104,10 @@
 ;; special program startup
 
 (defcommand psi () ()
-  (hsplit)
-  (resize (- (round (/ (screen-width (current-screen)) 5)))
-	  (screen-height (current-screen)))
+  (when (typep (current-group) 'tile-group)
+    (hsplit)
+    (resize (- (round (/ (screen-width (current-screen)) 3)))
+	    (screen-height (current-screen))))
   (run-or-raise "psi" '(:class "psi")))
 
 
