@@ -1,0 +1,76 @@
+(in-package :stumpwm)
+
+
+;; swank
+(load "/usr/share/emacs/site-lisp/slime/swank-loader.lisp")
+(swank-loader:init)
+(defcommand swank () ()
+  (swank:create-server :port 4005
+                       :style swank:*communication-style*
+		       :coding-system "utf-8-unix"
+                       :dont-close t)
+  (echo-string (current-screen) "Starting swank."))
+(define-key *root-map* (kbd "C-s") "swank")
+(swank)
+
+;; makeup
+(setf *message-window-gravity* :center)
+(setf *input-window-gravity* :center)
+(setf *screen-mode-line-format* '("%W | "))
+(setf *mode-line-position* :bottom)
+(setf *mode-line-border-color* "black")
+(setf *mouse-focus-policy* :click)
+(set-font "-misc-*-*-*-*-*-15-*-*-*-*-*-*-r")
+(setf *window-format* "%n - %c ")
+(toggle-mode-line (current-screen) (current-head))
+
+;; groups
+
+(gnewbg "G2")
+(gnewbg "G3")
+(gnewbg "G4")
+
+;; program shortcuts
+
+(defun define-program-commands (&rest names)
+  (map nil #'(lambda (name)
+	       (defcommand name () ()
+		 (run-or-raise name `(:class ,name))))
+       names))
+
+(define-program-commands
+  "chromium"
+  "urxvt"
+  "psi")
+
+;; keybindings
+
+(defmacro define-keys (map &rest keys)
+  `(progn
+     ,@(mapcar #'(lambda (k)
+		   (define-key map (kbd (first k)) (second k)))
+	       keys)))
+
+(define-keys *top-map*
+  ("s-C" "chromium")
+  ("s-T" "urxvt")
+  ("s-P" "psi")
+  ("s-R" "loadrc")
+  ; switching inside group
+  ("M-TAB" "gnext")
+  ("s-TAB" "gprev")
+  ; switching groups
+  ("M-F1" "gselect 1")
+  ("M-F2" "gselect 2")
+  ("M-F3" "gselect 3")
+  ("M-F4" "gselect 4"))
+
+(set-key-prefix (kbd "s-z"))
+
+(define-keys *root-map*
+  ("d" "echo-date"))
+
+;; contrib
+
+(set-contrib-dir "/usr/share/stumpwm/")
+
