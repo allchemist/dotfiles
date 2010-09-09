@@ -110,4 +110,32 @@
 	    (screen-height (current-screen))))
   (run-or-raise "psi" '(:class "psi")))
 
+;; mpd, audio
 
+(defcommand mpd-init ()()
+  (when (not (probe-file "/var/run/mpd/mpd.pid"))
+    (sb-ext:process-wait (run-shell-command "/etc/rc.d/mpd restart")))
+  (run-shell-command "mpc ls | mpc add")
+  (run-shell-command "urxvt -e \"ncmpc\"")
+  (echo-string (current-screen) "MPD started"))
+
+(defcommand mpd-seek-forward ()() (run-shell-command "mpc seek 10"))
+(defcommand mpd-seek-backward ()() (run-shell-command "mpc seek -10"))
+(defcommand mpd-next ()() (run-shell-command "mpc next"))
+(defcommand mpd-prev ()() (run-shell-command "mpc prev"))
+(defcommand mpd-toggle ()() (run-shell-command "mpc toggle"))
+
+(defcommand master-volume-inc ()() (run-shell-command "amixer sset \"Master\" 3+"))
+(defcommand master-volume-dec ()() (run-shell-command "amixer sset \"Master\" 3-"))
+
+(define-keys *root-map*
+  ("s-m" "mpd-init"))
+
+(define-keys *top-map*
+  ("s-Right" "mpd-seek-forward")
+  ("s-Left" "mpd-seek-backward")
+  ("s-Up" "master-volume-inc")
+  ("s-Down" "master-volume-dec")
+  ("C-s-Left" "mpd-prev")
+  ("C-s-Right" "mpd-next")
+  ("s-p" "mpd-toggle"))
