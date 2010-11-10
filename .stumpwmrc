@@ -11,6 +11,7 @@
                        :dont-close t)
   (echo-string (current-screen) "Starting swank."))
 (define-key *root-map* (kbd "C-s") "swank")
+
 (swank)
 
 ;; makeup
@@ -21,7 +22,7 @@
 (setf *mode-line-border-color* "black")
 (setf *mouse-focus-policy* :click)
 (set-font "-misc-*-*-*-*-*-15-*-*-*-*-*-*-r")
-(setf *window-format* "%n - %c ")
+(setf *window-format* " %n (%t) ")  ; "%n - %c ")
 (enable-mode-line (current-screen) (current-head) t)
 
 ;; groups
@@ -119,8 +120,8 @@
   (run-shell-command "urxvt -e \"ncmpc\"")
   (echo-string (current-screen) "MPD started"))
 
-(defcommand mpd-seek-forward ()() (run-shell-command "mpc seek 10"))
-(defcommand mpd-seek-backward ()() (run-shell-command "mpc seek -10"))
+(defcommand mpd-seek-forward ()() (run-shell-command "mpc seek +1%"))
+(defcommand mpd-seek-backward ()() (run-shell-command "mpc seek -1%"))
 (defcommand mpd-next ()() (run-shell-command "mpc next"))
 (defcommand mpd-prev ()() (run-shell-command "mpc prev"))
 (defcommand mpd-toggle ()() (run-shell-command "mpc toggle"))
@@ -128,8 +129,14 @@
 (defcommand master-volume-inc ()() (run-shell-command "amixer sset \"Master\" 3+"))
 (defcommand master-volume-dec ()() (run-shell-command "amixer sset \"Master\" 3-"))
 
+;; wifi
+
+(defcommand akado-wifi-start ()()
+  (run-shell-command "sh ~/.akado_wifi"))
+
 (define-keys *root-map*
-  ("s-m" "mpd-init"))
+  ("s-m" "mpd-init")
+  ("s-w" "akado-wifi-start"))
 
 (define-keys *top-map*
   ("s-Right" "mpd-seek-forward")
@@ -139,3 +146,14 @@
   ("C-s-Left" "mpd-prev")
   ("C-s-Right" "mpd-next")
   ("s-p" "mpd-toggle"))
+
+;; acpi
+
+(defcommand brightness-increase () () (run-shell-command "xbacklight -inc +20 -time 10 -steps 1"))
+(defcommand brightness-decrease () () (run-shell-command "xbacklight -dec 20 -time 10 -steps 1"))
+(defcommand suspend-to-ram () () (run-shell-command "echo 3 >> /proc/acpi/sleep"))
+
+(define-keys *top-map*
+  ("C-M-Up" "brightness-increase")
+  ("C-M-Down" "brightness-decrease")
+  ("XF86Standby" "suspend-to-ram"))
